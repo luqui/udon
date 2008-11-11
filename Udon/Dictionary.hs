@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Udon.Dictionary 
     ( Dictionary
     , getDictionaryMap, makeDictionary

@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Udon.HashFS 
     ( Repo, Ref
     , HashFS
