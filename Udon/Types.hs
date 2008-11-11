@@ -1,11 +1,15 @@
 module Udon.Types 
-    ( Type(..)
+    ( Typed(..)
+    , Type(..)
     , ContentType(..)
     )
 where
 
 import Data.Binary
 import Control.Applicative
+
+class Typed a where
+    getType :: a -> Type
 
 data Type
     = TyContent ContentType
