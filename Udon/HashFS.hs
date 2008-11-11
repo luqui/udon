@@ -6,6 +6,7 @@ module Udon.HashFS
     , fromStr
     , addBlob, getBlob
     , addObject, getObject
+    , hashObject
     )
 where
 
@@ -86,3 +87,6 @@ addObject = addBlob . encode
 
 getObject :: (Binary b) => Ref -> HashFS (Maybe b)
 getObject ref = fmap decode <$> getBlob ref
+
+hashObject :: (Binary b) => b -> Ref
+hashObject = sha256 . encode
