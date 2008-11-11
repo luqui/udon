@@ -14,6 +14,7 @@ class (Binary a) => Typed a where
 
 data Type
     = TyContent ContentType
+    | TyRef Type
     deriving (Eq)
 
 data ContentType
@@ -22,8 +23,14 @@ data ContentType
     deriving (Eq)
 
 instance Binary Type where
-    get = TyContent <$> get
-    put (TyContent c) = put c
+    get = do
+        tag <- getWord8
+        case tag of
+            0 -> TyContent <$> get
+            1 -> TyRef     <$> get
+            _ -> fail $ "Unknown tag for Type: " ++ show tag
+    put (TyContent c) = putWord8 0 >> put c
+    put (TyRef t)     = putWord8 1 >> put t
 
 instance Binary ContentType where
     get = do

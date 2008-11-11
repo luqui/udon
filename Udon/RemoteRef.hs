@@ -9,6 +9,7 @@ import Udon.HashFS
 import Data.Binary
 import Control.Applicative
 import Data.Maybe
+import Udon.Types
 
 data RemoteRef a
     = Local a Ref  -- Ref is a cache of the reference for this value
@@ -18,6 +19,9 @@ instance Binary (RemoteRef a) where
     get = Remote <$> get
     put (Local _ r) = put r
     put (Remote r)  = put r
+
+instance (Typed a) => Typed (RemoteRef a) where
+    getType _ = TyRef (getType (undefined::a))
 
 makeRemote :: (Binary a) => a -> RemoteRef a
 makeRemote x = Local x (hashObject x)
@@ -36,3 +40,4 @@ lookupRemoteChg (Remote r)  = fmap (flip Local r) <$> getObject r
 
 lookupRemote :: (Binary a) => RemoteRef a -> HashFS (RemoteRef a)
 lookupRemote r = fromMaybe r <$> lookupRemoteChg r
+
