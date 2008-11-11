@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Udon.Text 
     ( Text, makeText, getText )
 where

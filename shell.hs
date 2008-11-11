@@ -2,8 +2,6 @@
 
 module Main where
 
-import Udon.HashFS
-import Udon.Dictionary
 import qualified Data.Map as Map
 import qualified Data.ByteString.Lazy as Str
 import Data.Binary
@@ -13,6 +11,10 @@ import System.Environment
 import System.Directory
 import Control.Monad.Reader
 import Control.Applicative
+import Udon.HashFS
+import Udon.Dictionary
+import Udon.Text
+import Udon.TypedBlob
 
 data Env =
     Env { envRepo :: Repo
@@ -23,19 +25,47 @@ data Env =
 type Shell = ReaderT Env IO
 type Command = [String] -> Shell (Maybe Ref)
 
-
 commands :: [(String, Command)]
-commands = [ "ls" --> listRoot ]
+commands = [ "ls"       --> listRoot
+           , "newtext"  --> newText
+           , "showtext" --> showText
+           ]
     where
     infix 1 -->
     (-->) = (,)
 
-    listRoot args = do
-        env <- ask
-        Just dict <- liftIO $ inRepo (envRepo env) $ getObject (envRoot env)
-        forM_ (Map.assocs $ getDictionaryMap dict) $ \(k,v) -> do
+    listRoot [] = do
+        dict <- getRoot
+        forM_ (Map.assocs dict) $ \(k,v) -> do
             liftIO $ putStrLn k
         return Nothing
+
+    newText [objname] = do
+        env <- ask
+        dict <- getRoot
+        text <- liftIO $ makeText <$> Str.getContents
+        let newdict = makeDictionary (Map.insert objname (makeBlob text) dict)
+        ref' <- liftIO $ inRepo (envRepo env) $ addObject newdict
+        return $ Just ref'
+
+    showText [objname] = do
+        env <- ask
+        dict <- getRoot
+        let mayberef = Map.lookup objname dict
+        case mayberef of
+            Nothing -> fail "No such object"
+            Just ref -> do
+                case readBlob ref of
+                    Nothing -> fail "Object is not text"
+                    Just t -> liftIO $ Str.putStrLn (getText t)
+        return Nothing
+
+    getRoot = do
+        env <- ask
+        Just dict <- liftIO $ inRepo (envRepo env) $ getObject (envRoot env)
+        return $ getDictionaryMap dict
+        
+        
 
 main :: IO ()
 main = do
