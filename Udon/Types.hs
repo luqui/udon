@@ -7,16 +7,19 @@ where
 
 import Data.Binary
 import Control.Applicative
+import qualified Data.ByteString as Str
 
-class Typed a where
+class (Binary a) => Typed a where
     getType :: a -> Type
 
 data Type
     = TyContent ContentType
+    deriving (Eq)
 
 data ContentType
     = ContentDictionary
     | ContentText
+    deriving (Eq)
 
 instance Binary Type where
     get = TyContent <$> get
