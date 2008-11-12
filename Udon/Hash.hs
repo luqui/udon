@@ -1,5 +1,5 @@
 module Udon.Hash 
-    ( Blob, Hash, hashBlob ) 
+    ( Blob, Hash, hashBlob, hashBinary ) 
 where
 
 import qualified Data.ByteString.Lazy as Str
@@ -17,3 +17,6 @@ instance Binary Hash where
 
 hashBlob :: Blob -> Hash
 hashBlob = Hash . Str.pack . SHA.hash . Str.unpack
+
+hashBinary :: (Binary a) => a -> Hash
+hashBinary = hashBlob . encode

@@ -9,7 +9,7 @@ import Control.Monad
 import Control.Arrow hiding (pure)
 import Data.Monoid
 
-newtype ReqList i o a = ReqList [(o, i -> a)]
+newtype ReqList i o a = ReqList [(i, o -> a)]
 
 instance Functor (ReqList i o) where
     fmap f (ReqList xs) = ReqList ((fmap.second.fmap) f xs)
@@ -46,15 +46,15 @@ instance Monad (Request i o) where
 
 fapp x ff = ff <*> pure x
 
-request :: o -> Request i o i
+request :: i -> Request i o o
 request o = Request (ReqList [(o, Return)])
 
 
-runRequest :: Request i o a -> Either [(o, i -> Request i o a)] a
+runRequest :: Request i o a -> Either [(i, o -> Request i o a)] a
 runRequest (Return x)            = Right x
 runRequest (Request (ReqList l)) = Left l
 
-runRequestHandler :: (Monad m) => (o -> m i) -> Request i o a -> m a
+runRequestHandler :: (Monad m) => (i -> m o) -> Request i o a -> m a
 runRequestHandler handler req = 
     case runRequest req of
         Right x -> return x
