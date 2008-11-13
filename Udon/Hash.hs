@@ -9,7 +9,7 @@ import Data.Binary
 type Blob = Str.ByteString
 
 newtype Hash = Hash Blob
-    deriving Eq
+    deriving (Eq,Ord)
 
 instance Binary Hash where
     put (Hash x) = put x
