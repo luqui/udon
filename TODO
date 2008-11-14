@@ -25,3 +25,16 @@ There are a couple challenges:
 
 There may be a better solution assuming an Udon package manager though 
 (since we can reference modules and ranges of modules directly).
+
+============================
+
+A better format, perhaps, would be to have a standard way to talk about
+the direct references of a data structure.  That is, looking at some
+unknown blob of data, we can still tell which parts of it are references,
+so that we can GC them and communicate them when cloning.
+
+Maybe an indexed dictionary out front like:
+
+    HASH 0 HASH 0 HASH 1 data
+
+And then references refer to that dictionary.
