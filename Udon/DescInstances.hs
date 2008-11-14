@@ -7,6 +7,7 @@ import qualified Data.ByteString.Lazy as StrL
 import Data.Ratio
 import qualified Data.IntSet as IntSet
 import Data.Binary (Binary)
+import qualified Data.Map as Map
 
 
 -- A bunch of binary instances
@@ -32,3 +33,6 @@ instance (Data a, Data b) => Data (Either a b) where
     desc = D.descEither desc desc
 instance (Data a, Data b) => Data (a,b) where
     desc = D.pair desc desc
+
+instance (Binary k, Data v) => Data (Map.Map k v) where
+    desc = D.wrap (Map.fromDistinctAscList, Map.toAscList) $ D.list (D.pair binary desc)
