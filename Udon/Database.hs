@@ -7,6 +7,7 @@ where
 
 import Udon.Hash
 import Udon.DataDesc
+import Udon.RootType
 import Data.Binary.Put (runPut)
 
 data Database m 
@@ -29,8 +30,9 @@ writeDump db = \dump@(Dump put _) -> go (hashBlob (runPut put)) dump
                 store db hash (runPut put)
                 mapM_ (uncurry go) subs
 
-writeRef :: (Data a, Monad m) => Database m -> ExtRef a -> m ()
-writeRef db ref =
+writeRef :: (Data a, Monad m) => Database m -> RootType a -> ExtRef a -> m RootRef
+writeRef db rtype ref = do
     case unsafeExtRefValue ref of
         Nothing -> return ()
         Just v -> writeDump db (ddDump desc v)
+    return $ makeRootRef rtype ref
