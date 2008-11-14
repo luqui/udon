@@ -9,13 +9,6 @@ import Udon.Hash
 import Udon.DataDesc
 import Data.Binary.Put (runPut)
 
--- This class is to guarantee uniqueness of descriptors
-class Data a where
-    desc :: DataDesc a
-
-instance Data a => Data (ExtRef a) where
-    desc = ref desc
-
 data Database m 
     -- The weird signature for fetch is an optimization.  Sometimes
     -- it's easier to tell whether you *can* get a reference than

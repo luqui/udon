@@ -1,6 +1,7 @@
 module Udon.DataDesc 
     ( ExtRef, extRefHash, unsafeExtRefValue, unsafeMakeExtRef
     , DataDesc, ddDump, ddGC, ddRead
+    , Data(..)
     , Dump(..)
     , GCQueue(..)
     , pure, sequ, ref, binary
@@ -30,6 +31,11 @@ data DataDesc a
                , ddGC   :: a -> GCQueue
                , ddRead :: Get a
                }
+
+-- This class is to guarantee uniqueness of descriptors
+class Data a where
+    desc :: DataDesc a
+
 
 data Dump = Dump Put [(Hash, Dump)]
 
@@ -69,3 +75,6 @@ binary = DataDesc {
     ddDump = \a -> Dump (put a) [],
     ddGC   = \_ -> mempty,
     ddRead = get }
+
+instance Data a => Data (ExtRef a) where
+    desc = ref desc
