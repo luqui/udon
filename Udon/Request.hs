@@ -1,6 +1,6 @@
 module Udon.Request 
     ( Request, request
-    , runRequest, runRequestHandler
+    , runRequest, runRequestHandler, runRequestHandlerMaximal
     )
 where
 
@@ -60,3 +60,16 @@ runRequestHandler handler req =
         Right x -> return x
         Left [] -> fail "No more requests to handle"
         Left ((o,f):_) -> runRequestHandler handler . f =<< handler o
+
+runRequestHandlerMaximal :: (Monad m) => (i -> m (Maybe o)) -> Request i o a -> m a
+runRequestHandlerMaximal handler req =
+    case runRequest req of 
+        Right x -> return x
+        Left reqs -> runReqs reqs
+    where
+    runReqs [] = fail "No more handleable requests"
+    runReqs ((i,f):rest) = do
+        result <- handler i
+        case result of
+            Nothing -> runReqs rest
+            Just b  -> runRequestHandlerMaximal handler (f b)
