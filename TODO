@@ -1,0 +1,27 @@
+The type infrastructure, eg. RootType and the Data classes, are only as
+portable as the Binary and Typeable instances.  The latter in particular
+is not terribly portable (it is even brittle under some innocuous
+refactorings).  
+
+I can't think of any *provable* way to solve this, nor any fully
+distributed way.  But a decent solution would be to add a member to
+Data:
+
+class Data a where
+    desc :: DataDesc a
+    version :: String
+
+With the requirement that two types with the same version are serial
+compatible (versions should also be unique across types).  Thus if you
+make a change to the Binary representation, you are responsible for
+updating the version.
+
+There are a couple challenges:
+
+* For existing modules, if we define version on their behalf, we will
+  have a hard time keeping up with updates.  That is, the dependencies
+  of the package that defines these have to be pretty strict.
+* For new modules, making sure that there are no name collisions.
+
+There may be a better solution assuming an Udon package manager though 
+(since we can reference modules and ranges of modules directly).
