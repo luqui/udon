@@ -1,5 +1,5 @@
 module Udon.DataDesc 
-    ( ExtRef, extRefHash, unsafeExtRefValue, unsafeMakeExtRef
+    ( ExtRef, extRefHash, unsafeExtRefValue, unsafeMakeExtRef, makeExtRef
     , DataDesc, ddDump, ddGC, ddRead
     , Data(..)
     , Dump(..)
@@ -13,6 +13,7 @@ import Data.Binary
 import Data.Maybe
 import Data.Binary
 import Data.Binary.Get (runGet)
+import Data.Binary.Put (runPut)
 import Data.Monoid
 
 data ExtRef a = ExtRef Hash (Maybe a)
@@ -25,6 +26,14 @@ unsafeExtRefValue (ExtRef _ v) = v
 
 unsafeMakeExtRef :: Hash -> Maybe a -> ExtRef a
 unsafeMakeExtRef = ExtRef
+
+makeExtRef :: (Data a) => a -> ExtRef a
+makeExtRef x = unsafeMakeExtRef (hashDesc x) (Just x)
+
+hashDesc :: (Data a) => a -> Hash
+hashDesc x = hashBlob (runPut put)
+    where
+    Dump put _ = ddDump desc x
 
 data DataDesc a 
     = DataDesc { ddDump :: a -> Dump

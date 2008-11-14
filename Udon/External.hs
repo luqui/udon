@@ -1,12 +1,11 @@
 module Udon.External 
-    ( Ext, makeExtRef, deref, runExt )
+    ( Ext, deref, runExt )
 where
 
 import Udon.Hash
 import Udon.Request
 import Udon.DataDesc
 import Udon.Database
-import Data.Binary.Put (runPut)
 import Data.Binary.Get (runGet)
 import Control.Applicative
 import Control.Monad
@@ -14,12 +13,6 @@ import Control.Monad
 
 newtype Ext a = Ext (Request Hash Blob a)
     deriving (Functor,Applicative,Monad)
-
-makeExtRef :: (Data a) => a -> ExtRef a 
-makeExtRef x = unsafeMakeExtRef hash (Just x)
-    where
-    Dump putm _ = ddDump desc x
-    hash = hashBlob $ runPut putm
 
 deref :: (Data a) => ExtRef a -> Ext a
 deref ref = Ext $ 
