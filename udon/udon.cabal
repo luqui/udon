@@ -1,0 +1,15 @@
+Name: udon
+Description:
+    Universal Distributed Object Notation: a library for representing
+    data structures in distributed storage.
+Version: 0.2
+Stability: experimental
+Synopsis: Universal Distributed Object Notation
+License: BSD3
+Category: Data
+Author: Luke Palmer
+Maintainer: lrpalmer@gmail.com
+Build-Type: Simple
+Build-Depends: base, binary, mtl, containers, bytestring, dataenc, Crypto
+Exposed-Modules: Udon.API, Udon.DBAPI, Udon.DescCombinators
+Extensions: 

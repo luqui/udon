@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Udon.Chunk 
     ( Chunk, chunkRefs
     , ChunkGet, liftGet, getHash, runChunkGet

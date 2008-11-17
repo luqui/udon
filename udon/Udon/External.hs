@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Udon.External 
     ( Ext, deref, runExt )
 where

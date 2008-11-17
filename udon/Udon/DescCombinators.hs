@@ -1,3 +1,5 @@
+{-# LANGUAGE GADTs #-}
+
 module Udon.DescCombinators 
     ( DataDesc, pure, sequ, ref, binary
     , unit, pair, wrap, fixedList, list
@@ -37,13 +39,12 @@ data Pattern a where
 match :: ([a] -> [b]) -> DataDesc b -> (b -> a) -> Pattern a
 match f = Pattern (listToMaybe . f . return)
 
-alt :: forall a. [Pattern a] -> DataDesc a
+alt :: [Pattern a] -> DataDesc a
 alt pats = 
     sequ tag binary $ \idx -> 
     case pats !! idx of
         Pattern match descb t -> wrap (t, myFromJust . match) descb
     where
-    tag :: a -> Int
     tag x = myHead $ do
                 (n, Pattern pat _ _) <- zip [0..] pats
                 guard (isJust (pat x))
