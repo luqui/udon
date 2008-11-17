@@ -3,7 +3,6 @@ module Udon.DataDesc
     , DataDesc, ddDump, ddRead
     , Data(..)
     , Dump(..)
-    , GCQueue(..)
     , pure, sequ, ref, binary
     )
 where
@@ -51,12 +50,6 @@ data Dump = Dump (ChunkPut ()) [(Hash, Dump)]
 instance Monoid Dump where
     mempty = Dump (return ()) []
     mappend (Dump p xs) (Dump p' ys) = Dump (p >> p') (xs ++ ys)
-
-newtype GCQueue = GCQueue [(Hash, Blob -> GCQueue)]
-
-instance Monoid GCQueue where
-    mempty = GCQueue []
-    mappend (GCQueue xs) (GCQueue ys) = GCQueue (xs ++ ys)
 
 pure   :: a -> DataDesc a
 pure x = DataDesc {

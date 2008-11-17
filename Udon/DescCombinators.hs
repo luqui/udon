@@ -1,4 +1,9 @@
-module Udon.DescCombinators where
+module Udon.DescCombinators 
+    ( DataDesc, pure, sequ, ref, binary
+    , unit, pair, wrap, fixedList, list
+    , Pattern, match, alt, descMaybe, descEither
+    )
+where
 
 import Udon.DataDesc
 import Data.Maybe (isJust, listToMaybe)

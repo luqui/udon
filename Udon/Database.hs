@@ -1,6 +1,5 @@
 module Udon.Database 
-    ( Data(..)
-    , Database(..)
+    ( Database(..)
     , writeData
     , makeDynRef
     , exportDyn
