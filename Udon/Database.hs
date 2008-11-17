@@ -4,6 +4,7 @@ module Udon.Database
     , writeData
     , makeDynRef
     , exportDyn
+    , markAlive
     )
 where
 
@@ -12,6 +13,8 @@ import Udon.Chunk
 import Udon.DataDesc
 import Udon.DynRef
 import Data.Binary
+import qualified Data.Set as Set
+import qualified Control.Monad.State as State
 
 data Database m 
     -- The weird signature for fetch is an optimization.  Sometimes
@@ -20,6 +23,7 @@ data Database m
     -- an open).
     = Database { fetch  :: Hash -> m (Maybe (m Blob))
                , store  :: Hash -> Blob -> m ()
+               , export :: Hash -> m ()
                }
 
 newtype ExportRef = ExportRef Hash
@@ -52,6 +56,28 @@ writeDump db = \dump@(Dump rput _) -> do
             Nothing -> do
                 store db hash (encode . snd . runChunkPut $ rput)
                 mapM_ (uncurry go) subs
+
+getRefs :: (Monad m) => Database m -> Hash -> m [Hash]
+getRefs db h = do
+    getter <- fetch db h
+    case getter of
+        Nothing -> return []
+        Just g -> do
+            blob <- g
+            return $ chunkRefs (decode blob)
+
+markAlive :: (Monad m) => Database m -> [Hash] -> m (Set.Set Hash)
+markAlive db hashes = State.execStateT (mapM_ go hashes) Set.empty
+    where
+    go h = do
+        seen <- State.get
+        if h `Set.member` seen
+            then return ()
+            else do
+                State.put (Set.insert h seen)
+                nexts <- State.lift $ getRefs db h
+                mapM_ go nexts
+    
 
 writeData :: (Monad m, Data a) => Database m -> a -> m Hash
 writeData db x = writeDump db (ddDump desc x)
