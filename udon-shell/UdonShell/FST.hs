@@ -1,6 +1,6 @@
 module UdonShell.FST 
     ( FST, makeFSTDir, runFST
-    , newFile, checkFile, readFile, deleteFile
+    , Path, newFile, checkFile, readFile, deleteFile
     )
 where
 

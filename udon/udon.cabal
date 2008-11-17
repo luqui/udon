@@ -12,4 +12,6 @@ Maintainer: lrpalmer@gmail.com
 Build-Type: Simple
 Build-Depends: base, binary, mtl, containers, bytestring, dataenc, Crypto
 Exposed-Modules: Udon.API, Udon.DBAPI, Udon.DescCombinators
+Other-Modules: Udon.Chunk, Udon.DataDesc, Udon.Database, Udon.DescInstances,
+               Udon.DynRef, Udon.External, Udon.Hash, Udon.Request
 Extensions: 
