@@ -18,9 +18,17 @@ import Unsafe.Coerce
 
 data Chunk = Chunk [Hash] Blob
 
+getList :: Get a -> Get [a]
+getList g = do
+    len <- get :: Get Int
+    replicateM len g
+
+putList :: (a -> Put) -> [a] -> Put
+putList f xs = put (length xs) >> mapM_ f xs
+
 instance Binary Chunk where
-    put (Chunk hs blob) = put hs >> put blob
-    get = liftM2 Chunk get get
+    put (Chunk hs blob) = putList binHashPut hs >> put blob
+    get = liftM2 Chunk (getList binHashGet) get
 
 chunkRefs :: Chunk -> [Hash]
 chunkRefs (Chunk hs _) = hs
@@ -40,6 +48,7 @@ runChunkGet (ChunkGet m) (Chunk hs blob) = runGet (runReaderT m hs) blob
 
 
 newtype ChunkPut a = ChunkPut (State.StateT (Map.Map Int Hash) PutM a)
+    deriving (Functor, Monad)
 
 liftPut :: PutM a -> ChunkPut a
 liftPut = ChunkPut . lift

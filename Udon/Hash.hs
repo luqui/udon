@@ -1,5 +1,5 @@
 module Udon.Hash 
-    ( Blob, Hash, showHash, hashBlob, hashBinary ) 
+    ( Blob, Hash, showHash, binHashGet, binHashPut, hashBlob, hashBinary ) 
 where
 
 import qualified Data.ByteString.Lazy as Str
@@ -15,9 +15,13 @@ newtype Hash = Hash Blob
 showHash :: Hash -> String
 showHash (Hash blob) = Base64.encode (Str.unpack blob)
 
-instance Binary Hash where
-    put (Hash x) = put x
-    get = fmap Hash get
+-- Not an instance of binary so that we can't accidentally write
+-- a hash without referencing it in the Chunk structure.
+binHashPut :: Hash -> Put
+binHashPut (Hash x) = put x
+
+binHashGet :: Get Hash
+binHashGet = fmap Hash get
 
 hashBlob :: Blob -> Hash
 hashBlob = Hash . Str.pack . SHA.hash . Str.unpack

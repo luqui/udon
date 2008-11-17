@@ -1,6 +1,6 @@
 module Udon.DataDesc 
     ( ExtRef, extRefHash, unsafeExtRefValue, unsafeMakeExtRef, makeExtRef
-    , DataDesc, ddDump, ddGC, ddRead
+    , DataDesc, ddDump, ddRead
     , Data(..)
     , Dump(..)
     , GCQueue(..)
@@ -9,6 +9,7 @@ module Udon.DataDesc
 where
 
 import Udon.Hash
+import Udon.Chunk
 import Data.Binary
 import Data.Maybe
 import Data.Binary
@@ -31,14 +32,13 @@ makeExtRef :: (Data a) => a -> ExtRef a
 makeExtRef x = unsafeMakeExtRef (hashDesc x) (Just x)
 
 hashDesc :: (Data a) => a -> Hash
-hashDesc x = hashBlob (runPut put)
+hashDesc x = hashBlob . encode . snd . runChunkPut $ put
     where
     Dump put _ = ddDump desc x
 
 data DataDesc a 
     = DataDesc { ddDump :: a -> Dump
-               , ddGC   :: a -> GCQueue
-               , ddRead :: Get a
+               , ddRead :: ChunkGet a
                }
 
 -- This class is to guarantee uniqueness of descriptors
@@ -46,7 +46,7 @@ class Data a where
     desc :: DataDesc a
 
 
-data Dump = Dump Put [(Hash, Dump)]
+data Dump = Dump (ChunkPut ()) [(Hash, Dump)]
 
 instance Monoid Dump where
     mempty = Dump (return ()) []
@@ -61,29 +61,26 @@ instance Monoid GCQueue where
 pure   :: a -> DataDesc a
 pure x = DataDesc {
     ddDump = \_ -> mempty,
-    ddGC   = \_ -> mempty,
     ddRead = return x }
 
 sequ   :: (b -> a) -> DataDesc a -> (a -> DataDesc b) -> DataDesc b
 sequ i pa j = DataDesc {
     ddDump = \b -> let a = i b in ddDump pa a `mappend` ddDump (j a) b,
-    ddGC   = \b -> let a = i b in ddGC   pa a `mappend` ddGC   (j a) b,
     ddRead = ddRead pa >>= ddRead . j }
 
 ref    :: DataDesc a -> DataDesc (ExtRef a)
 ref pa = DataDesc {
-    ddDump = \(ExtRef h v) -> Dump (put h) $ case v of
-                                                Nothing -> []
-                                                Just x  -> [(h, ddDump pa x)],
+    ddDump = \(ExtRef h v) -> Dump (liftPut $ binHashPut h) $ 
+                                case v of
+                                    Nothing -> []
+                                    Just x  -> [(h, ddDump pa x)],
     -- The ddRead in this entry is why we cannot do typeclasses
-    ddGC   = \(ExtRef h v) -> GCQueue [(h, \blob -> ddGC pa (runGet (ddRead pa) blob))],
-    ddRead = fmap (\h -> ExtRef h Nothing) get }
+    ddRead = fmap (\h -> ExtRef h Nothing) getHash }
 
 binary :: Binary a => DataDesc a
 binary = DataDesc {
-    ddDump = \a -> Dump (put a) [],
-    ddGC   = \_ -> mempty,
-    ddRead = get }
+    ddDump = \a -> Dump (liftPut $ put a) [],
+    ddRead = liftGet get }
 
 instance Data a => Data (ExtRef a) where
     desc = ref desc
