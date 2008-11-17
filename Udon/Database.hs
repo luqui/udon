@@ -1,14 +1,13 @@
 module Udon.Database 
     ( Data(..)
     , Database(..)
-    , writeRef
     )
 where
 
 import Udon.Hash
+import Udon.Chunk
 import Udon.DataDesc
-import Udon.RootType
-import Data.Binary.Put (runPut)
+import Data.Binary
 
 data Database m 
     -- The weird signature for fetch is an optimization.  Sometimes
@@ -19,20 +18,18 @@ data Database m
                , store  :: Hash -> Blob -> m ()
                }
 
-writeDump :: (Monad m) => Database m -> Dump -> m ()
-writeDump db = \dump@(Dump put _) -> go (hashBlob (runPut put)) dump
+writeChunk :: (Monad m) => Database m -> Chunk -> m ()
+writeChunk db chunk = store db (hashBlob enc) enc
     where
-    go hash (Dump put subs) = do
+    enc = encode chunk
+
+writeDump :: (Monad m) => Database m -> Dump -> m ()
+writeDump db = \dump@(Dump rput _) -> go (hashBinary . snd . runChunkPut $ rput) dump
+    where
+    go hash (Dump rput subs) = do
         exists <- fetch db hash
         case exists of
             Just _  -> return ()
             Nothing -> do
-                store db hash (runPut put)
+                store db hash (encode . snd . runChunkPut $ rput)
                 mapM_ (uncurry go) subs
-
-writeRef :: (Data a, Monad m) => Database m -> RootType a -> ExtRef a -> m RootRef
-writeRef db rtype ref = do
-    case unsafeExtRefValue ref of
-        Nothing -> return ()
-        Just v -> writeDump db (ddDump desc v)
-    return $ makeRootRef rtype ref
