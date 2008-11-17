@@ -44,7 +44,7 @@ instance Monad (Request i o) where
     Return x >>= f = f x
     Request cs >>= f = Request (fmap (>>= f) cs)
 
-fapp x ff = ff <*> pure x
+fapp x = fmap ($ x)
 
 request :: i -> Request i o o
 request o = Request (ReqList [(o, Return)])

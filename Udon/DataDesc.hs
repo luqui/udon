@@ -70,7 +70,7 @@ sequ i pa j = DataDesc {
 
 ref    :: DataDesc a -> DataDesc (ExtRef a)
 ref pa = DataDesc {
-    ddDump = \(ExtRef h v) -> Dump (liftPut $ binHashPut h) $ 
+    ddDump = \(ExtRef h v) -> Dump (putHash h) $ 
                                 case v of
                                     Nothing -> []
                                     Just x  -> [(h, ddDump pa x)],
@@ -81,6 +81,11 @@ binary :: Binary a => DataDesc a
 binary = DataDesc {
     ddDump = \a -> Dump (liftPut $ put a) [],
     ddRead = liftGet get }
+
+instance Data Hash where
+    desc = DataDesc {
+        ddDump = \h -> Dump (putHash h) [],
+        ddRead = getHash }
 
 instance Data a => Data (ExtRef a) where
     desc = ref desc
