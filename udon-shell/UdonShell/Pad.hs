@@ -9,12 +9,9 @@ import qualified Udon.DescCombinators as D
 import qualified Data.Map as Map
 
 newtype Pad = Pad { unPad :: Map.Map String DynRef }
-    deriving (Typeable)
+    deriving (Typeable, Data)
 
 conj f = Pad . f . unPad
-
-instance Data Pad where
-    desc = D.wrap (Pad . Map.fromDistinctAscList, Map.toList . unPad) desc
 
 insert :: String -> DynRef -> Pad -> Pad
 insert str ref = conj (Map.insert str ref)
