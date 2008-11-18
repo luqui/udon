@@ -1,0 +1,15 @@
+Name: udon-shell
+Description:
+    Command-line interface between udon and traditional filesystems
+Cabal-Version: >= 1.2
+Version: 0.1
+Stability: experimental
+Synopsis: Universal Distributed Object Notation
+License: BSD3
+Category: Data
+Author: Luke Palmer
+Maintainer: lrpalmer@gmail.com
+Build-Type: Simple
+Build-Depends: base, udon
+executable udon
+  Main-Is: Main.hs
