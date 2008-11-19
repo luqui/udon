@@ -2,7 +2,7 @@ module Udon.DataDesc
     ( ExtRef, extRefHash, unsafeExtRefValue, unsafeMakeExtRef, makeExtRef
     , DataDesc, ddDump, ddRead
     , Data(..)
-    , Dump(..)
+    , Dump(..), hashDump
     , pure, sequ, ref, binary
     )
 where
@@ -31,9 +31,10 @@ makeExtRef :: (Data a) => a -> ExtRef a
 makeExtRef x = unsafeMakeExtRef (hashDesc x) (Just x)
 
 hashDesc :: (Data a) => a -> Hash
-hashDesc x = hashBlob . encode . snd . runChunkPut $ put
-    where
-    Dump put _ = ddDump desc x
+hashDesc = hashDump . ddDump desc
+
+hashDump :: Dump -> Hash
+hashDump (Dump rput _) = hashBinary . snd . runChunkPut $ rput
 
 data DataDesc a 
     = DataDesc { ddDump :: a -> Dump

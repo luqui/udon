@@ -48,8 +48,8 @@ writeChunk db chunk = store db (hashBlob enc) enc
     enc = encode chunk
 
 writeDump :: (Monad m) => Database m -> Dump -> m Hash
-writeDump db = \dump@(Dump rput _) -> do
-    let hash = hashBinary . snd . runChunkPut $ rput
+writeDump db = \dump -> do
+    let hash = hashDump dump
     go hash dump
     return hash
     where
@@ -91,7 +91,9 @@ writeData db x = writeDump db (ddDump desc x)
 -- is done with extref, but that has proven pretty tricky to do.
 makeDynRef :: (Monad m, Data a) => Database m -> DynType a -> ExtRef a -> m DynRef
 makeDynRef db dyntype ref = do
-    hash <- writeData db (unsafeExtRefValue ref)
+    case unsafeExtRefValue ref of
+        Nothing -> return ()
+        Just v -> writeData db v >> return ()
     return $ unsafeExtRefToDynRef dyntype ref
 
 exportDyn :: (Monad m) => Database m -> DynRef -> m ExportRef
