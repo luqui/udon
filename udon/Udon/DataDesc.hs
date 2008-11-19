@@ -1,6 +1,6 @@
 module Udon.DataDesc 
     ( ExtRef, extRefHash, unsafeExtRefValue, unsafeMakeExtRef, makeExtRef
-    , DataDesc, ddDump, ddRead
+    , DataDesc(..)
     , Data(..)
     , Dump(..), hashDump
     , pure, sequ, ref, binary

@@ -1,9 +1,9 @@
 module Udon.API
-    ( Database, writeData, makeDynRef, exportDyn, readExportDyn
+    ( Database, writeData, exportDyn, readExportRef
     , ExtRef, makeExtRef 
     , DataDesc, Data(..)  -- Udon.DescCombinators has the rest
     , DynType, makeDynType 
-    , DynRef, dynRefToExtRef
+    , DynRef, extRefToDynRef, dynRefToExtRef
     , Ext, deref, runExt
     )
 where

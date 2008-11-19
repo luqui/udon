@@ -1,9 +1,8 @@
 module Udon.Database 
     ( Database(..)
     , writeData
-    , makeDynRef
     , exportDyn
-    , readExportDyn
+    , readExportRef
     , markAlive
     )
 where
@@ -85,16 +84,6 @@ markAlive db hashes = State.execStateT (mapM_ go hashes) Set.empty
 writeData :: (Monad m, Data a) => Database m -> a -> m Hash
 writeData db x = writeDump db (ddDump desc x)
 
--- Writes data in the extref to the database and returns the dynref.
--- Could be done better, bundling unwritten data with the dynref, as
--- is done with extref, but that has proven pretty tricky to do.
-makeDynRef :: (Monad m, Data a) => Database m -> DynType a -> ExtRef a -> m DynRef
-makeDynRef db dyntype ref = do
-    case unsafeExtRefValue ref of
-        Nothing -> return ()
-        Just v -> writeData db v >> return ()
-    return $ unsafeExtRefToDynRef dyntype ref
-
 exportDyn :: (Monad m) => Database m -> DynRef -> m ExportRef
 exportDyn db dynref = do
     -- This should mark something "exported" in the database, perhaps,
@@ -102,6 +91,6 @@ exportDyn db dynref = do
     hash <- writeData db dynref
     return (ExportRef hash)
 
-readExportDyn :: (Monad m) => Database m -> ExportRef -> m (Maybe DynRef)
-readExportDyn db (ExportRef hash) = 
+readExportRef :: (Monad m) => Database m -> ExportRef -> m (Maybe DynRef)
+readExportRef db (ExportRef hash) = 
     (liftM.liftM) (runChunkGet (ddRead desc) . decode) $ fetch' db hash

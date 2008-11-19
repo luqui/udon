@@ -25,3 +25,9 @@ There are a couple challenges:
 
 There may be a better solution assuming an Udon package manager though 
 (since we can reference modules and ranges of modules directly).
+
+===================
+
+The implementation of the main Udon library is too coupled.  I don't
+want to export the DataDesc constructor, the unsafe* functions about
+ExtRefs, and a host of other things.  Thoughtful cleanup is needed.

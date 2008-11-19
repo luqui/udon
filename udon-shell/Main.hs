@@ -33,20 +33,20 @@ cmdInit [] = do
     log ("Creating udon repository at " ++ dir) $ do
         makeFSTDir dir
         runFST dir $ do
-            paddyn <- makeDynRef fsdb padType (makeExtRef Map.empty)
+            let paddyn = extRefToDynRef padType (makeExtRef Map.empty)
             exp <- exportDyn fsdb paddyn
             newFile ["ROOTPAD"] (encode exp)
 
-rootPadOp :: (Pad -> FST (a, Maybe Pad)) -> FST a
+rootPadOp :: (Pad -> Ext (a, Maybe Pad)) -> FST a
 rootPadOp f = do
     exp <- decode <$> UdonShell.FST.readFile ["ROOTPAD"]
-    paddyn <- fromJust <$> readExportDyn fsdb exp
+    paddyn <- fromJust <$> readExportRef fsdb exp
     let pad = fromJust $ dynRefToExtRef padType paddyn
-    (ret,mpad') <- f =<< runExt fsdb (deref pad)
+    (ret,mpad') <- runExt fsdb (f =<< deref pad)
     case mpad' of
         Nothing -> return ret
         Just pad' -> do
-            paddyn' <- makeDynRef fsdb padType (makeExtRef pad')
+            let paddyn' = extRefToDynRef padType (makeExtRef pad')
             exp' <- exportDyn fsdb paddyn'
             newFile ["ROOTPAD"] (encode exp')
             return ret
@@ -56,7 +56,7 @@ cmdLet [varname, filename] = do
     dir <- fstDir
     contents <- Str.readFile filename
     runFST dir . rootPadOp $ \pad -> do
-        dat <- makeDynRef fsdb fileType (makeExtRef contents)
+        let dat = extRefToDynRef fileType (makeExtRef contents)
         return ((), Just $ Map.insert varname dat pad)
 
 cmdLs :: [String] -> IO ()
@@ -69,14 +69,13 @@ cmdShow :: [String] -> IO ()
 cmdShow [varname] = do
     dir <- fstDir
     mcontents <- runFST dir . rootPadOp $ \pad -> do
-        let mdyn = Map.lookup varname pad
-        r <- case mdyn of
+        r <- case Map.lookup varname pad of
             Nothing -> return (Left $ "No such root pad entry " ++ varname)
             Just dyn -> do
                 case dynRefToExtRef fileType dyn of
                     Nothing -> return (Left "Pad entry does not have correct type")
                     Just extref -> do
-                        Right <$> runExt fsdb (deref extref)
+                        Right <$> deref extref
         return (r, Nothing)
     case mcontents of
         Left errmsg -> hPutStrLn stderr $ "*** Error: " ++ errmsg ++ "\n"
