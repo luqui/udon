@@ -12,12 +12,14 @@ import Udon.DescInstances ()
 
 type TypeID = String
 newtype DynType a = DynType TypeID
+    deriving (Typeable)
 
 -- Brittle!
 makeDynType :: (Typeable a) => a -> DynType a
 makeDynType = DynType . show . typeOf
 
 data DynRef = DynRef TypeID Hash
+    deriving Typeable
 
 instance Data DynRef where
     desc = D.wrap (uncurry DynRef, \(DynRef tid h) -> (tid,h)) desc

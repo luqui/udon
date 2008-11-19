@@ -5,7 +5,7 @@ where
 import qualified Data.ByteString.Lazy as Str
 import qualified Data.Digest.SHA256 as SHA
 import Data.Binary
-import qualified Codec.Binary.Base64 as Base64
+import qualified Codec.Binary.Base64Url as Base64
 
 type Blob = Str.ByteString
 

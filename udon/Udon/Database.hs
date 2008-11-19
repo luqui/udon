@@ -3,6 +3,7 @@ module Udon.Database
     , writeData
     , makeDynRef
     , exportDyn
+    , readExportDyn
     , markAlive
     )
 where
@@ -12,6 +13,7 @@ import Udon.Chunk
 import Udon.DataDesc
 import Udon.DynRef
 import Data.Binary
+import Control.Monad (liftM)
 import qualified Data.Set as Set
 import qualified Control.Monad.State as State
 
@@ -36,6 +38,9 @@ instance Binary ExportRef where
     get = fmap ExportRef binHashGet
 
 
+fetch' :: (Monad m) => Database m -> Hash -> m (Maybe Blob)
+fetch' db hash = 
+    maybe (return Nothing) (liftM Just) =<< fetch db hash
 
 writeChunk :: (Monad m) => Database m -> Chunk -> m ()
 writeChunk db chunk = store db (hashBlob enc) enc
@@ -95,3 +100,7 @@ exportDyn db dynref = do
     -- so that it is treated as part of the root set for GC.
     hash <- writeData db dynref
     return (ExportRef hash)
+
+readExportDyn :: (Monad m) => Database m -> ExportRef -> m (Maybe DynRef)
+readExportDyn db (ExportRef hash) = 
+    (liftM.liftM) (runChunkGet (ddRead desc) . decode) $ fetch' db hash

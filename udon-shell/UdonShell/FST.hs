@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module UdonShell.FST 
     ( FST, makeFSTDir, runFST
     , Path, newFile, checkFile, readFile, deleteFile
@@ -38,12 +40,12 @@ makePath path = do
     prefix <- ask
     let dir = prefix ++ intercalate "/" (init path)
     liftIO $ createDirectoryIfMissing True dir
-    return $ dir ++ last path
+    return $ dir ++ "/" ++ last path
 
 getPath :: Path -> FSTInternal FilePath
 getPath path = do
     prefix <- ask
-    return $ prefix ++ intercalate "/" path
+    return $ prefix ++ "/" ++ intercalate "/" path
 
 newFile :: Path -> Str.ByteString -> FST ()
 newFile path content = FST $ do

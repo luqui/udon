@@ -10,6 +10,6 @@ Category: Data
 Author: Luke Palmer
 Maintainer: lrpalmer@gmail.com
 Build-Type: Simple
-Build-Depends: base, udon
 executable udon
+  Build-Depends: base, containers, bytestring, mtl, directory, binary, udon
   Main-Is: Main.hs
