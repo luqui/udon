@@ -10,6 +10,7 @@ import Control.Applicative
 import Control.Monad (when)
 import Data.Binary
 import System.IO
+import System.Directory
 import qualified Data.ByteString.Lazy as Str
 import qualified Data.Map as Map
 
@@ -35,11 +36,11 @@ cmdInit [] = do
         runFST dir $ do
             let paddyn = extRefToDynRef padType (makeExtRef Map.empty)
             exp <- exportDyn fsdb paddyn
-            newFile ["ROOTPAD"] (encode exp)
+            newFile ["root.pad"] (encode exp)
 
 rootPadOp :: (Pad -> Ext (a, Maybe Pad)) -> FST a
 rootPadOp f = do
-    exp <- decode <$> UdonShell.FST.readFile ["ROOTPAD"]
+    exp <- decode <$> UdonShell.FST.readFile ["root.pad"]
     paddyn <- fromJust <$> readExportRef fsdb exp
     let pad = fromJust $ dynRefToExtRef padType paddyn
     (ret,mpad') <- runExt fsdb (f =<< deref pad)
@@ -48,7 +49,7 @@ rootPadOp f = do
         Just pad' -> do
             let paddyn' = extRefToDynRef padType (makeExtRef pad')
             exp' <- exportDyn fsdb paddyn'
-            newFile ["ROOTPAD"] (encode exp')
+            newFile ["root.pad"] (encode exp')
             return ret
 
 cmdLet :: [String] -> IO ()
@@ -81,13 +82,21 @@ cmdShow [varname] = do
         Left errmsg -> hPutStrLn stderr $ "*** Error: " ++ errmsg ++ "\n"
         Right content -> Str.putStr content
 
+cmdGC :: [String] -> IO ()
+cmdGC [] = do
+    dir <- fstDir
+    runFST dir $ do
+        exp <- decode <$> UdonShell.FST.readFile ["root.pad"]
+        gcCollect [exp]
+
 
 main = do
     args <- getArgs
     case args of
-        [] -> putStrLn "Commands: init, let, ls, show"
+        [] -> putStrLn "Commands: init, let, ls, show, gc"
         ("init":cmdargs) -> cmdInit cmdargs
         ("let":cmdargs) -> cmdLet cmdargs
         ("ls":cmdargs) -> cmdLs cmdargs
         ("show":cmdargs) -> cmdShow cmdargs
+        ("gc":cmdargs) -> cmdGC cmdargs
         _ -> putStrLn "Unknown command"

@@ -2,7 +2,7 @@
 
 module UdonShell.FST 
     ( FST, makeFSTDir, runFST
-    , Path, newFile, checkFile, readFile, deleteFile
+    , Path, newFile, checkFile, readFile, deleteFile, directoryFiles
     )
 where
 
@@ -38,7 +38,7 @@ type Path = [String]
 makePath :: Path -> FSTInternal FilePath
 makePath path = do
     prefix <- ask
-    let dir = prefix ++ intercalate "/" (init path)
+    let dir = prefix ++ "/" ++ intercalate "/" (init path)
     liftIO $ createDirectoryIfMissing True dir
     return $ dir ++ "/" ++ last path
 
@@ -64,3 +64,8 @@ readFile path = FST $ do
 deleteFile :: Path -> FST ()
 deleteFile path = FST $ do
     liftIO . removeFile =<< getPath path
+
+directoryFiles :: Path -> FST [String]
+directoryFiles path = FST $ do
+    dir <- getPath path
+    fmap (filter (\f -> f /= "." && f /= "..")) . liftIO $ getDirectoryContents dir

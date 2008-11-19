@@ -1,7 +1,9 @@
 module Udon.Database 
     ( Database(..)
     , writeData
+    , ExportRef
     , exportDyn
+    , exportRefHash
     , readExportRef
     , markAlive
     )
@@ -27,6 +29,9 @@ data Database m
 
 newtype ExportRef = ExportRef Hash
     deriving (Eq, Ord)
+
+exportRefHash :: ExportRef -> Hash
+exportRefHash (ExportRef h) = h
 
 instance Show ExportRef where
     show (ExportRef h) = "ExportRef \"" ++ showHash h ++ "\""
