@@ -24,7 +24,6 @@ data Database m
     -- an open).
     = Database { fetch  :: Hash -> m (Maybe (m Blob))
                , store  :: Hash -> Blob -> m ()
-               , export :: Hash -> m ()
                }
 
 newtype ExportRef = ExportRef Hash
