@@ -1,9 +1,12 @@
+{-# LANGUAGE PatternGuards #-}
+
 module Main where
 
 import Prelude hiding (log)
 import UdonShell.FST
 import UdonShell.FSDB
 import Udon.API
+import Data.List (intercalate)
 import System.Environment
 import Data.Maybe (fromJust)
 import Control.Applicative
@@ -90,13 +93,18 @@ cmdGC [] = do
         gcCollect [exp]
 
 
+commands = [ "init" --> cmdInit
+           , "let"  --> cmdLet
+           , "ls"   --> cmdLs
+           , "show" --> cmdShow
+           , "gc"   --> cmdGC
+           ]
+    where
+    (-->) = (,)
+
 main = do
     args <- getArgs
     case args of
-        [] -> putStrLn "Commands: init, let, ls, show, gc"
-        ("init":cmdargs) -> cmdInit cmdargs
-        ("let":cmdargs) -> cmdLet cmdargs
-        ("ls":cmdargs) -> cmdLs cmdargs
-        ("show":cmdargs) -> cmdShow cmdargs
-        ("gc":cmdargs) -> cmdGC cmdargs
-        _ -> putStrLn "Unknown command"
+        [] -> hPutStrLn stderr $ "Commands: " ++ intercalate ", " (map fst commands)
+        (cmd:args) | Just f <- lookup cmd commands -> f args
+                   | otherwise -> hPutStrLn stderr "Unknown command"
